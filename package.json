@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "test-websocket",
   "private": true,
   "scripts": {
     "build": "turbo run build",
