@@ -3,20 +3,26 @@ import "./App.css";
 
 const randomId = () => Math.random().toString(36).substring(2, 9);
 
+const colors = ["blue", "green", "orange", "purple", "pink", "yellow"];
+const myColor = colors[Math.floor(Math.random() * colors.length)];
+
 function App() {
   const [wsConnected, setWsConnected] = useState(false);
   // const [message, setMessage] = useState<string>("");
   // const [receivedMessage, setReceivedMessage] = useState<string>("");
   const id = randomId();
-  const [users, setUsers] = useState<{ x: number; y: number; id: string }[]>(
-    []
-  );
+  const [users, setUsers] = useState<
+    { x: number; y: number; id: string; color: string; name: string }[]
+  >([]);
+
   const [myUser, setMyUser] = useState<{
     x: number;
     y: number;
+    color: string;
   }>({
     x: 0,
     y: 0,
+    color: myColor,
   });
 
   const wsUrl = `ws://localhost:3000`;
@@ -28,14 +34,6 @@ function App() {
       const rect = (e.target as HTMLElement).getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      console.log({
-        x,
-        y,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        left: rect.left,
-        top: rect.top,
-      });
 
       const container = document.querySelector(
         "div[style*='position: relative']"
@@ -59,9 +57,10 @@ function App() {
           return;
         }
       }
-      setMyUser({ x, y });
+
+      setMyUser({ x, y, color: myColor });
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ x, y, id }));
+        wsRef.current.send(JSON.stringify({ x, y, id, color: myColor }));
       }
     });
   }, []);
@@ -78,7 +77,6 @@ function App() {
     };
 
     ws.onmessage = (event) => {
-      console.log("WebSocket message received:", event.data);
       const data = JSON.parse(event.data);
       if (Array.isArray(data)) {
         setUsers(data.filter((u) => u.id !== id));
@@ -137,10 +135,16 @@ function App() {
             borderRadius: "50%",
             width: "50px",
             height: "50px",
-            backgroundColor: "red",
+            backgroundColor: myUser.color,
             position: "absolute",
             left: myUser.x,
             top: myUser.y,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontWeight: "bold",
+            fontSize: "24px",
           }}
         ></div>
         {users.map((user) => {
@@ -154,10 +158,16 @@ function App() {
                 borderRadius: "50%",
                 width: "50px",
                 height: "50px",
-                backgroundColor: "blue",
+                backgroundColor: u.color,
                 position: "absolute",
                 left: u.x,
                 top: u.y,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "24px",
               }}
             ></div>
           );
