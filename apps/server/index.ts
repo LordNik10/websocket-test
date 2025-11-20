@@ -7,7 +7,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const positions: { x: number; y: number; id: string }[] = [];
+interface Position {
+  x: number;
+  y: number;
+  id: string;
+  color: string;
+  type: "move";
+}
+
+interface Message {
+  text: string;
+  id: string;
+  color: string;
+  type: "chat";
+}
+
+const positions: Position[] = [];
+const messages: Message[] = [];
 
 const server = http.createServer(app);
 
@@ -23,22 +39,33 @@ wss.on("connection", (ws: WebSocket) => {
   positions.length = 0; // Clear positions on new connection
   console.log("New WebSocket connection established");
 
-  ws.on("message", (position: string) => {
-    console.log(`Received message: ${position}`);
+  ws.on("message", (data: Position | Message) => {
+    console.log(`Received message: ${JSON.parse(data.toString())}`);
+    console.log(`Type: ${JSON.parse(data.toString()).type}`);
+    const dataJSON = JSON.parse(data.toString());
     // ws.send(`Echo: ${position}`);
-    positions.findIndex((p) => p.id === JSON.parse(position.toString()).id) !==
-    -1
-      ? (positions[
-          positions.findIndex(
-            (p) => p.id === JSON.parse(position.toString()).id
-          )
-        ] = JSON.parse(position.toString()))
-      : positions.push(JSON.parse(position.toString()));
+    if (dataJSON.type === "move") {
+      console.log("here");
 
-    console.log("positions:", positions);
+      positions.findIndex((p) => p.id === dataJSON.id) !== -1
+        ? (positions[positions.findIndex((p) => p.id === dataJSON.id)] =
+            dataJSON)
+        : positions.push(dataJSON);
+    }
+    if (dataJSON.type === "chat") {
+      messages.push(dataJSON);
+    }
 
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
+        if (dataJSON.type === "chat") {
+          console.log("messages:", messages);
+
+          client.send(JSON.stringify(messages));
+          return;
+        }
+        console.log("position:", positions);
+
         client.send(JSON.stringify(positions));
       }
     });

@@ -6,14 +6,26 @@ const randomId = () => Math.random().toString(36).substring(2, 9);
 const colors = ["blue", "green", "orange", "purple", "pink", "yellow"];
 const myColor = colors[Math.floor(Math.random() * colors.length)];
 
+interface Position {
+  x: number;
+  y: number;
+  id: string;
+  color: string;
+}
+
+interface ChatMessage {
+  text: string;
+  id: string;
+  color: string;
+}
+
 function App() {
   const [wsConnected, setWsConnected] = useState(false);
-  // const [message, setMessage] = useState<string>("");
-  // const [receivedMessage, setReceivedMessage] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
   const id = randomId();
-  const [users, setUsers] = useState<
-    { x: number; y: number; id: string; color: string; name: string }[]
-  >([]);
+  const [users, setUsers] = useState<Position[]>([]);
 
   const [myUser, setMyUser] = useState<{
     x: number;
@@ -30,7 +42,7 @@ function App() {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    document.addEventListener("click", (e) => {
+    const handleClick = (e: MouseEvent) => {
       const rect = (e.target as HTMLElement).getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -60,26 +72,36 @@ function App() {
 
       setMyUser({ x, y, color: myColor });
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ x, y, id, color: myColor }));
+        wsRef.current.send(
+          JSON.stringify({ x, y, id, color: myColor, type: "move" })
+        );
       }
-    });
+    };
+    document.addEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
   }, []);
 
   useEffect(() => {
     const ws = new WebSocket(wsUrl);
-
-    // Connect to WebSocket
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log("WebSocket connected");
       setWsConnected(true);
     };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      if (Array.isArray(data)) {
+      console.log({ data });
+      console.log("type:", data[0].type);
+
+      if (Array.isArray(data) && data[0].type === "move") {
         setUsers(data.filter((u) => u.id !== id));
+      } else if (data[0].type === "chat") {
+        console.log("chat", data);
+
+        setChatMessages(data);
       }
     };
 
@@ -96,21 +118,19 @@ function App() {
       ws.close();
     };
   }, []);
-
-  // const handleSendMessage = () => {
-  //   if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-  //     alert("WebSocket is not connected");
-  //     return;
-  //   }
-
-  //   if (!message.trim()) {
-  //     alert("Please enter a message");
-  //     return;
-  //   }
-
-  //   wsRef.current.send(message);
-  //   setMessage("");
-  // };
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({ type: "chat", id, color: myColor, text: message })
+      );
+      setChatMessages((prev) => [
+        ...prev,
+        { id, color: myColor, text: message },
+      ]);
+      setMessage("");
+    }
+  };
 
   return (
     <div>
@@ -148,8 +168,6 @@ function App() {
           }}
         ></div>
         {users.map((user) => {
-          console.log({ user });
-
           const u = user;
           return (
             <div
@@ -172,6 +190,89 @@ function App() {
             ></div>
           );
         })}
+      </div>
+      {/* Live Chat UI */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 20,
+          right: 20,
+          width: 300,
+          background: "#fff",
+          border: "1px solid #ccc",
+          borderRadius: 8,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          zIndex: 1000,
+          padding: 12,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            maxHeight: 180,
+            marginBottom: 8,
+          }}
+        >
+          {chatMessages.map((msg, idx) => {
+            console.log({ msg });
+
+            return (
+              <div
+                key={idx}
+                style={{
+                  marginBottom: 4,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 16,
+                    height: 16,
+                    borderRadius: "50%",
+                    background: msg.color,
+                    marginRight: 8,
+                  }}
+                ></span>
+                <span style={{ wordBreak: "break-word" }}>{msg.text}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display: "flex" }}>
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            style={{
+              flex: 1,
+              marginRight: 8,
+              padding: 4,
+              borderRadius: 4,
+              border: "1px solid #ccc",
+            }}
+            placeholder="Type a message..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSendMessage();
+            }}
+          />
+          <button
+            onClick={handleSendMessage}
+            style={{
+              padding: "4px 12px",
+              borderRadius: 4,
+              border: "none",
+              background: "#007bff",
+              color: "#fff",
+            }}
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
   );
