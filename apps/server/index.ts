@@ -2,10 +2,21 @@ import express from "express";
 import cors from "cors";
 import http from "http";
 import { WebSocket, WebSocketServer } from "ws";
+import cron from "cron";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const job = new cron.CronJob("*/5 * * * *", function () {
+  console.log("Clearing messages");
+  try {
+    messages.length = 0;
+  } catch (error) {
+    console.error("Error clearing messages:", error);
+  }
+});
+job.start();
 
 interface Position {
   x: number;
