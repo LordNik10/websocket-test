@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import { ServerReady } from "./ServerReady";
 
 const randomId = () => Math.random().toString(36).substring(2, 9);
 
@@ -133,148 +134,150 @@ function App() {
   };
 
   return (
-    <div>
-      {wsConnected ? "You are connected ✅" : "You are disconnected ❌"}
-      {/* <input
+    <ServerReady>
+      <div>
+        {wsConnected ? "You are connected ✅" : "You are disconnected ❌"}
+        {/* <input
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
       />
       <button onClick={handleSendMessage}>Send Message</button>
       <div>Received Message: {receivedMessage}</div> */}
-      <div
-        style={{
-          width: "500px",
-          height: "500px",
-          border: "1px solid black",
-          position: "relative",
-        }}
-      >
         <div
           style={{
-            borderRadius: "50%",
-            width: "50px",
-            height: "50px",
-            backgroundColor: myUser.color,
-            position: "absolute",
-            left: myUser.x,
-            top: myUser.y,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontWeight: "bold",
-            fontSize: "24px",
-          }}
-        ></div>
-        {users.map((user) => {
-          const u = user;
-          return (
-            <div
-              key={u.id}
-              style={{
-                borderRadius: "50%",
-                width: "50px",
-                height: "50px",
-                backgroundColor: u.color,
-                position: "absolute",
-                left: u.x,
-                top: u.y,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: "24px",
-              }}
-            ></div>
-          );
-        })}
-      </div>
-      {/* Live Chat UI */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 20,
-          right: 20,
-          width: 300,
-          background: "#fff",
-          border: "1px solid #ccc",
-          borderRadius: 8,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-          zIndex: 1000,
-          padding: 12,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            maxHeight: 180,
-            marginBottom: 8,
+            width: "500px",
+            height: "500px",
+            border: "1px solid black",
+            position: "relative",
           }}
         >
-          {chatMessages.map((msg, idx) => {
-            console.log({ msg });
-
+          <div
+            style={{
+              borderRadius: "50%",
+              width: "50px",
+              height: "50px",
+              backgroundColor: myUser.color,
+              position: "absolute",
+              left: myUser.x,
+              top: myUser.y,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "24px",
+            }}
+          ></div>
+          {users.map((user) => {
+            const u = user;
             return (
               <div
-                key={idx}
+                key={u.id}
                 style={{
-                  marginBottom: 4,
+                  borderRadius: "50%",
+                  width: "50px",
+                  height: "50px",
+                  backgroundColor: u.color,
+                  position: "absolute",
+                  left: u.x,
+                  top: u.y,
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: "24px",
                 }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 16,
-                    height: 16,
-                    borderRadius: "50%",
-                    background: msg.color,
-                    marginRight: 8,
-                  }}
-                ></span>
-                <span style={{ wordBreak: "break-word" }}>{msg.text}</span>
-              </div>
+              ></div>
             );
           })}
         </div>
-        <div style={{ display: "flex" }}>
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+        {/* Live Chat UI */}
+        <div
+          style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            width: 300,
+            background: "#fff",
+            border: "1px solid #ccc",
+            borderRadius: 8,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            zIndex: 1000,
+            padding: 12,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div
             style={{
               flex: 1,
-              marginRight: 8,
-              padding: 4,
-              borderRadius: 4,
-              border: "1px solid #ccc",
-            }}
-            placeholder="Type a message..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSendMessage();
-            }}
-          />
-          <button
-            onClick={handleSendMessage}
-            style={{
-              padding: "4px 12px",
-              borderRadius: 4,
-              border: "none",
-              background: "#007bff",
-              color: "#fff",
+              overflowY: "auto",
+              maxHeight: 180,
+              marginBottom: 8,
             }}
           >
-            Send
-          </button>
+            {chatMessages.map((msg, idx) => {
+              console.log({ msg });
+
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    marginBottom: 4,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      background: msg.color,
+                      marginRight: 8,
+                    }}
+                  ></span>
+                  <span style={{ wordBreak: "break-word" }}>{msg.text}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex" }}>
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              style={{
+                flex: 1,
+                marginRight: 8,
+                padding: 4,
+                borderRadius: 4,
+                border: "1px solid #ccc",
+              }}
+              placeholder="Type a message..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSendMessage();
+              }}
+            />
+            <button
+              onClick={handleSendMessage}
+              style={{
+                padding: "4px 12px",
+                borderRadius: 4,
+                border: "none",
+                background: "#007bff",
+                color: "#fff",
+              }}
+            >
+              Send
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </ServerReady>
   );
 }
 
