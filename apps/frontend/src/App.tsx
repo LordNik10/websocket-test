@@ -38,7 +38,7 @@ function App() {
     color: myColor,
   });
 
-  const wsUrl = `ws://localhost:3000`;
+  const wsUrl = import.meta.env.VITE_WS_URL;
 
   const wsRef = useRef<WebSocket | null>(null);
 
